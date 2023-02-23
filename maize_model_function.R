@@ -34,7 +34,7 @@ maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,st
   # Initialize state variables ----
   # Vector: Number of simulation days
   #ndays <- nrow(weather)
-  ndays <- length(seq(start,end,step))
+  #ndays <- length(seq(start,end,step))
   # Vector: Thermal time age of the crop on day t [deg.C/day]
   TT <- rep(NA, ndays)
   # Vector: Leaf area index (area of leaves per unit ground area) [m3/m3]
@@ -156,6 +156,7 @@ maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,st
     B[day + 1] <- B[day] + dB
   }
   #outputs <- data.frame(day = weather$day, TT, LAI, B)
+  #sim_yield <- B[134]
   sim_yield <- B[134]
   return(sim_yield)
 }
@@ -181,9 +182,9 @@ tidy_daily_weather[4] <-lapply(tidy_daily_weather[4],function(x) {(x*0.0036)*(24
 tidy_daily_weather %>% fill(Tmin, Tmax, I, .direction = "down") -> tidy_daily_weather # Replace NAs
 
 #subset weather data by year
-wdata_2016<-tidy_daily_weather %>% filter(year == "2016")
-wdata_2017<-tidy_daily_weather %>% filter(year == "2017")
-wdata_2018<-tidy_daily_weather %>% filter(year == "2018")
+wdata_2016<-tidy_daily_weather %>% filter(year == "2016")%>% slice(125:258)
+wdata_2017<-tidy_daily_weather %>% filter(year == "2017")%>% slice(125:258)
+wdata_2018<-tidy_daily_weather %>% filter(year == "2018")%>% slice(125:258)
 
 outputs_robeson <- data.frame(year = c(2016, 2017, 2018),
                               simulated = rep(NA, 3),
@@ -200,13 +201,10 @@ outputs_robeson[2] <-lapply(outputs_robeson[2],function(x) {x*(10^-6)*39.37*4046
 
 
 #PAUSE,THINK,DISCUSS
-# Looking at the values there is some over predicting and underpredicting bewteen the observed and simulated values. I feel that the model performed well, given that the 3 points fall along the on-to-on line.?It maybe helpful tp see if the trend is captured.
-
-
-
-
+# Looking at the values there is some over predicting and under predicting between the observed and simulated values. The 3 points fall a good  distance away from the one-to-one line but I feel that the model performed well, given that the 3 points fall along the on-to-on line. 
 # Create a plot showing simulated and observed maize biomass values
 ggplot() + 
+  
   geom_point(data = outputs_robeson, 
              aes(x = simulated, y = observed),
              color = "purple") +
