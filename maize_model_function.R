@@ -33,7 +33,7 @@ maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,st
   
   # Initialize state variables ----
   # Vector: Number of simulation days
-  #ndays <- nrow(weather)
+  ndays <- nrow(weather)
   #ndays <- length(seq(start,end,step))
   # Vector: Thermal time age of the crop on day t [deg.C/day]
   TT <- rep(NA, ndays)
@@ -100,8 +100,24 @@ ggplot() +
   theme_bw() +
   labs(x = expression("Simulated Biomass (g "*m^{-2}*")"),
        y = expression("Observed Biomass (g "*m^{-2}*")"))
+
+fun_out_preds <- data.frame(day = c(140,160,180,200,220,240), 
+                            b_preds = rep(NA, 6))
+fun_out_preds$b_preds[1]<-function_outputs$B[140]
+fun_out_preds$b_preds[2]<-function_outputs$B[160]
+fun_out_preds$b_preds[3]<-function_outputs$B[180]
+fun_out_preds$b_preds[4]<-function_outputs$B[200]
+fun_out_preds$b_preds[5]<-function_outputs$B[220]
+fun_out_preds$b_preds[6]<-function_outputs$B[240]
+
+#model eval metrics
+rmse <- sqrt((1/6)*sum((observations$Bobs-fun_out_preds$b_preds)^2,na.rm = TRUE))
+EF <- 1-((sum((observations$Bobs-fun_out_preds$b_preds)^2,na.rm = TRUE))/(sum((observations$Bobs-mean(fun_out_preds$b_preds))^2,na.rm = TRUE)))
+r <-cor(observations$Bobs,fun_out_preds$b_preds)
+bias <- (1/6)*sum((observations$Bobs-fun_out_preds$b_preds),na.rm = TRUE)
+
 #Pause,think,discuss
-# I thought that the model captured the overall signal of the observed data so I assumed that the model efficiency would be good. I was surprised and thought that the model would under predict the data. The model appears to over predict in the beginning and the under predict towards the end but the values fall close to the one-to-one line.
+# I thought that the model captured the overall signal of the observed data so I assumed that the model efficiency would be good and it close to 1. I was surprised and thought that the model would under predict the data. The model appears to over predict in the beginning and the under predict towards the end but the values fall close to the one-to-one line.Given that the EF is close to 1 and the correlation is close to one, this means that the model is predicting well and that there exists a strong relation between the two.
 
 ## 4.Apply the maize model to estimate average county-scale corn yields in Robeson County,NC.
 daily_weather <- read_csv("data/weather_lumberton_2016_2018.csv")
@@ -201,7 +217,7 @@ outputs_robeson[2] <-lapply(outputs_robeson[2],function(x) {x*(10^-6)*39.37*4046
 
 
 #PAUSE,THINK,DISCUSS
-# Looking at the values there is some over predicting and under predicting between the observed and simulated values. The 3 points fall a good  distance away from the one-to-one line but I feel that the model performed well, given that the 3 points fall along the on-to-on line. 
+# The model appears to be over fitting the data, this maybe because previously the model captured the middle trend of the data but not the beginning and end.
 # Create a plot showing simulated and observed maize biomass values
 ggplot() + 
   
