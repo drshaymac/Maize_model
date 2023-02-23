@@ -1,11 +1,14 @@
 ########################################################################################
 # Summary: Predicting maize yields using a simple model
-# Author:
-# Date:
+# Author:Shana McDowell
+# Date: 2/17/2023
 ########################################################################################
 
 # Load packages and explanatory variable observations ----
 library(tidyverse)
+library(lubridate)
+library(janitor)
+
 weather <- read_csv("data/weather_observations.csv")
 head(weather)
 
@@ -40,21 +43,21 @@ LAI[1] <- 0.1
 B[1] <- 1
 
 # Run the simulation ----
-for (day in ***) { 
+for (day in 1:(ndays-1)) { 
   # Calculate rates of change
   ## dTT:
-  dTT <- ***
+  dTT <- max(((weather$Tmin[day] + weather$Tmax[day])/2) - Tb,0)
     ## dB:
-    if(TT[day] <= TTM) {dB <- ***}
-  else {dB <- ***}
+    if(TT[day] <= TTM) {dB <- RUE*(1-exp(-K*LAI[day]))*weather$I[day]}
+  else {dB <- 0}
   ## dLAI:
-  if (TT[day] <= TTL) {dLAI <- ***}
-  else {dLAI <- ***}
+  if (TT[day] <= TTL) {dLAI <- a*dTT*LAI[day]*max(LAIm-LAI[day],0)}
+  else {dLAI <- 0}
   
   # Update state variables
-  TT[day + 1] <- ***
-    LAI[day + 1] <- ***
-    B[day + 1] <- ***
+  TT[day + 1] <- TT[day] + dTT
+    LAI[day + 1] <-LAI[day] + dLAI
+    B[day + 1] <- B[day] + dB
 }
 
 # Inspect your model outputs ----
