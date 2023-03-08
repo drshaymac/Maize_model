@@ -181,9 +181,9 @@ tidy_daily_weather[4] <-lapply(tidy_daily_weather[4],function(x) {(x*0.0036)*(24
 tidy_daily_weather %>% fill(Tmin, Tmax, I, .direction = "down") -> tidy_daily_weather # Replace NAs
 
 #subset weather data by year
-wdata_2016<-tidy_daily_weather %>% filter(year == "2016")
-wdata_2017<-tidy_daily_weather %>% filter(year == "2017")
-wdata_2018<-tidy_daily_weather %>% filter(year == "2018")
+wdata_2016<-tidy_daily_weather %>% filter(year == "2016") %>% slice(126:258,)
+wdata_2017<-tidy_daily_weather %>% filter(year == "2017") %>% slice(126:258,)
+wdata_2018<-tidy_daily_weather %>% filter(year == "2018") %>% slice(126:258,)
 
 outputs_robeson <- data.frame(year = c(2016, 2017, 2018),
                               simulated = rep(NA, 3),
@@ -200,7 +200,7 @@ outputs_robeson[2] <-lapply(outputs_robeson[2],function(x) {x*(10^-6)*39.37*4046
 
 
 #PAUSE,THINK,DISCUSS
-# Looking at the values there is some over predicting and underpredicting bewteen the observed and simulated values. I feel that the model performed well, given that the 3 points fall along the on-to-on line.?It maybe helpful tp see if the trend is captured.
+# Looking at the values there is some over predicting and under predicting bewteen the observed and simulated values. I feel that the model performed well, given that the 3 points fall along the on-to-on line.?It maybe helpful tp see if the trend is captured.
 
 
 
