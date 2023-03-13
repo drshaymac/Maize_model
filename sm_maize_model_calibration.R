@@ -181,4 +181,5 @@ ggplot() +
 ###Pause,Think,Discuss
 #1.Goodness-of-fit - Does the increase in predictive performance justify calibration in this case? Why or why not? Yes, .53 to .98 is a huge jump in model EF. We can also see that the calibrated model is a much better to the six points than the uncalibrated model.
 
-#2.Interpreting the calibrated parameters - How did the calibrated parameters differ from the literature-defined values (Tb = 7, TTM = 1200, and TTL = 700)? What do you make of these differences? 
+#2.Interpreting the calibrated parameters - How did the calibrated parameters differ from the literature-defined values (Tb = 7, TTM = 1200, and TTL = 700)? What do you make of these differences? Tb and TTL increased to 11.5 and 708.7 respectively, and TTM decreased to 1193. I would assume that these changes are a result of the change in location or adapting to the general temperature in Europe.
+
