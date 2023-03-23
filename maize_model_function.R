@@ -14,7 +14,7 @@ weather <- read_csv("data/weather_observations.csv")
 
 ## 2. CREATE USER-DEFINED FUNCTION:MAIZE_MODEL()
 #Initialize maize_model_function
-maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,step){
+#maize_model2 <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,step){
   # Define parameters ----
   # Baseline temperature for growth [deg. C]
   Tb <- Tb
@@ -32,22 +32,21 @@ maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,st
   LAIm <- LAIm
   
   # Initialize state variables ----
-  # Vector: Number of simulation days
-  #ndays <- nrow(weather)
-  ndays <- length(seq(start,end,step))
+  # Vector: time vector
+  t <- seq(start,end,step)
   # Vector: Thermal time age of the crop on day t [deg.C/day]
-  TT <- rep(NA, ndays)
+  TT <- rep(NA, length(t))
   # Vector: Leaf area index (area of leaves per unit ground area) [m3/m3]
-  LAI <- rep(NA, ndays)
+  LAI <- rep(NA,length(t))
   # Vector: Biomass of crop per square meter of ground area [g/m2]
-  B <- rep(NA, ndays)
+  B <- rep(NA, length(t))
   # Assign initial values
-  TT[1] <- TT0
-  LAI[1] <- LAI0
-  B[1] <- B0
+  TT[start] <- TT0
+  LAI[start] <- LAI0
+  B[start] <- B0
   
   # Run the simulation ----
-  for (day in 1:(ndays-1)) {
+  for (day in t[1:(length(t)-1)]) {
     # Calculate rates of change
     ## dTT:
     dTT <- max(((weather$Tmin[day] + weather$Tmax[day])/2) - Tb,0)
@@ -63,49 +62,10 @@ maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,st
     LAI[day + 1] <-LAI[day] + dLAI
     B[day + 1] <- B[day] + dB
   }
-  outputs <- data.frame(day = weather$day, TT, LAI, B)
-  #sim_yield <- B[134]
-  return( outputs)
+  outputs <- data.frame(day = weather$day[t], TT = TT[t], LAI = LAI[t], B = B[t])
+  
+  return(outputs)
 }
-
-# Inspect your function outputs --
-function_outputs <- maize_model(weather, Tb = 7, TTM = 1200, TTL = 700, K = 0.7, RUE = 1.85, a = 0.001, LAIm = 7, TT0 = 0, LAI0 = 0.1, B0 = 1, start = 1, end = 365, step = 1)
-
-# Inspect new output
-head(function_outputs)
-
-# Read state variable observations
-observations <- read_csv("data/state_variable_observations.csv")
-
-# Create a plot showing simulated and observed maize biomass values
-ggplot() + 
-  geom_point(data = function_outputs, 
-             aes(x = day, y = B),
-             color = "red") +
-  geom_point(data = observations, 
-             aes(x = day, y = Bobs)) +
-  theme_bw() +
-  labs(x = "Time (day)",
-       y = expression("Biomass (g "*m^{-2}*")"))
-
-
-## EVALUATE GOODNESS-OF-FIT
-maize_data<-left_join(observations,function_outputs)
-# Create a plot showing simulated and observed maize biomass values
-ggplot() + 
-  geom_point(data = maize_data, 
-             aes(x = B, y = Bobs),
-             color = "purple") +
-  geom_abline() +
-  theme_bw() +
-  labs(x = expression("Simulated Biomass (g "*m^{-2}*")"),
-       y = expression("Observed Biomass (g "*m^{-2}*")"))
-#Pause,think,discuss
-# I thought that the model captured the overall signal of the observed data so I assumed that the model efficiency would be good. I was surprised and thought that the model would under predict the data. The model appears to over predict in the beginning and the under predict towards the end but the values fall close to the one-to-one line.
-
-## 4.Apply the maize model to estimate average county-scale corn yields in Robeson County,NC.
-daily_weather <- read_csv("data/weather_lumberton_2016_2018.csv")
-corn_yeild <- read_csv("data/usda_nass_corn_yields.csv")
 maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,step){
   # Define parameters ----
   # Baseline temperature for growth [deg. C]
@@ -160,6 +120,97 @@ maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,st
   return(sim_yield)
 }
 
+# Inspect your function outputs --
+function_outputs <- maize_model2(weather, Tb = 7, TTM = 1200, TTL = 700, K = 0.7, RUE = 1.85, a = 0.001, LAIm = 7, TT0 = 0, LAI0 = 0.1, B0 = 1, start = 1, end = 365, step = 1)
+
+# Inspect new output
+head(function_outputs)
+
+# Read state variable observations
+observations <- read_csv("data/state_variable_observations.csv")
+
+# Create a plot showing simulated and observed maize biomass values
+ggplot() + 
+  geom_point(data = function_outputs, 
+             aes(x = day, y = B),
+             color = "red") +
+  geom_point(data = observations, 
+             aes(x = day, y = Bobs)) +
+  theme_bw() +
+  labs(x = "Time (day)",
+       y = expression("Biomass (g "*m^{-2}*")"))
+
+
+## EVALUATE GOODNESS-OF-FIT
+maize_data<-left_join(observations,function_outputs)
+# Create a plot showing simulated and observed maize biomass values
+ggplot() + 
+  geom_point(data = maize_data, 
+             aes(x = B, y = Bobs),
+             color = "purple") +
+  geom_abline() +
+  theme_bw() +
+  labs(x = expression("Simulated Biomass (g "*m^{-2}*")"),
+       y = expression("Observed Biomass (g "*m^{-2}*")"))
+#Pause,think,discuss
+# I thought that the model captured the overall signal of the observed data so I assumed that the model efficiency would be good. I was surprised and thought that the model would under predict the data. The model appears to over predict in the beginning and the under predict towards the end but the values fall close to the one-to-one line.
+
+## 4.Apply the maize model to estimate average county-scale corn yields in Robeson County,NC.
+daily_weather <- read_csv("data/weather_lumberton_2016_2018.csv")
+corn_yeild <- read_csv("data/usda_nass_corn_yields.csv")
+maize_model <- function(weather,Tb,TTM,TTL,K,RUE,a,LAIm,TT0,LAI0,B0,start,end,step){
+  # Define parameters ----
+  # Baseline temperature for growth [deg. C]
+  Tb <- Tb
+  # Temperature sum for crop maturity [deg.C/day]
+  TTM <- TTM
+  # Temperature sum at the end of leaf area increase [deg.C/day]
+  TTL <- TTL
+  # Extinction coefficient [--]
+  K <- K
+  # Radiation use efficiency [g/MJ]
+  RUE <- RUE
+  # The relative rate of LAI increase for small values of LAI [deg.C/day]
+  a <- a
+  # Maximum LAI [m3/m3]
+  LAIm <- LAIm
+  
+  # Initialize state variables ----
+  # Vector: time vector
+  t <- seq(start,end,step)
+  # Vector: Thermal time age of the crop on day t [deg.C/day]
+  TT <- rep(NA, length(t))
+  # Vector: Leaf area index (area of leaves per unit ground area) [m3/m3]
+  LAI <- rep(NA,length(t))
+  # Vector: Biomass of crop per square meter of ground area [g/m2]
+  B <- rep(NA, length(t))
+  # Assign initial values
+  TT[start] <- TT0
+  LAI[start] <- LAI0
+  B[start] <- B0
+  
+  # Run the simulation ----
+  for (day in t[1:(length(t)-1)]) {
+    # Calculate rates of change
+    ## dTT:
+    dTT <- max(((weather$Tmin[day] + weather$Tmax[day])/2) - Tb,0)
+    ## dB:
+    if(TT[day] <= TTM) {dB <- RUE*(1-exp(-K*LAI[day]))*weather$I[day]}
+    else {dB <- 0}
+    ## dLAI:
+    if (TT[day] <= TTL) {dLAI <- a*dTT*LAI[day]*max(LAIm-LAI[day],0)}
+    else {dLAI <- 0}
+    
+    # Update state variables
+    TT[day + 1] <- TT[day] + dTT
+    LAI[day + 1] <-LAI[day] + dLAI
+    B[day + 1] <- B[day] + dB
+  }
+  outputs <- data.frame(day = weather$day[t], TT = TT[t], LAI = LAI[t], B = B[t])
+ 
+  return(outputs)
+}
+
 
 #clean corn yield data
 tidy_corn_yeild <- clean_names(corn_yeild)#change column names
@@ -181,9 +232,9 @@ tidy_daily_weather[4] <-lapply(tidy_daily_weather[4],function(x) {(x*0.0036)*(24
 tidy_daily_weather %>% fill(Tmin, Tmax, I, .direction = "down") -> tidy_daily_weather # Replace NAs
 
 #subset weather data by year
-wdata_2016<-tidy_daily_weather %>% filter(year == "2016") %>% slice(126:258,)
-wdata_2017<-tidy_daily_weather %>% filter(year == "2017") %>% slice(126:258,)
-wdata_2018<-tidy_daily_weather %>% filter(year == "2018") %>% slice(126:258,)
+wdata_2016<-tidy_daily_weather %>% filter(year == "2016") #%>% slice(126:258,)
+wdata_2017<-tidy_daily_weather %>% filter(year == "2017") #%>% slice(126:258,)
+wdata_2018<-tidy_daily_weather %>% filter(year == "2018") #%>% slice(126:258,)
 
 outputs_robeson <- data.frame(year = c(2016, 2017, 2018),
                               simulated = rep(NA, 3),
